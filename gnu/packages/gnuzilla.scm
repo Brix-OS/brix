@@ -118,7 +118,8 @@
                                   version "esr.source.tar.xz"))
               (sha256
                (base32
-                "1fx52y52c3dmgr5gm64x40r2n6zq5ckqiqsd6vlhsly5wb1w0xaf"))))
+                "1fx52y52c3dmgr5gm64x40r2n6zq5ckqiqsd6vlhsly5wb1w0xaf"))
+              (patches (search-patches "mozjs-xp-win.patch"))))
     (build-system gnu-build-system)
     (arguments
      (list
