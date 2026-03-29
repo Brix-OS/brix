@@ -109,16 +109,16 @@
 (define-public mozjs
   (package
     (name "mozjs")
-    (version "140.3.0")
+    (version "140.10.1")
     (source (origin
               (method url-fetch)
-              ;; TODO: Switch to IceCat source once available on ftp.gnu.org.
+              ;; TODO (Noé Lopez): Switch to IceCat source.
               (uri (string-append "https://ftp.mozilla.org/pub/firefox"
                                   "/releases/" version "esr/source/firefox-"
                                   version "esr.source.tar.xz"))
               (sha256
                (base32
-                "05i3czn3v2qnhir8apcphbqy7rmy1dn7kcwx5yyi2qvmjcyfpipg"))))
+                "1fx52y52c3dmgr5gm64x40r2n6zq5ckqiqsd6vlhsly5wb1w0xaf"))))
     (build-system gnu-build-system)
     (arguments
      (list
