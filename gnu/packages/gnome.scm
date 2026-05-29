@@ -9787,6 +9787,11 @@ printf '~a is deprecated.  Use the \"gnome-extensions\" CLI or \
               (lambda _
                 (install-file (string-append #$output "/share/applications/org.gnome.Shell.desktop")
                               (string-append #$output "/etc/xdg/autostart"))))
+            (add-after 'install 'wrap-glycin-loaders
+              (lambda* (#:key inputs #:allow-other-keys)
+                (wrap-program (string-append #$output "/bin/gnome-shell")
+                  `("XDG_DATA_DIRS" ":" prefix
+                    ,(list (dirname (search-input-directory inputs "/share/glycin-loaders")))))))
             (replace 'glib-or-gtk-wrap
               (let ((wrap (assoc-ref %standard-phases 'glib-or-gtk-wrap)))
                 (lambda* (#:key inputs outputs #:allow-other-keys)
@@ -9829,6 +9834,7 @@ printf '~a is deprecated.  Use the \"gnome-extensions\" CLI or \
            geoclue
            gjs
            gtk
+           glycin-loaders
            gnome-autoar
            gnome-bluetooth
            gnome-desktop
