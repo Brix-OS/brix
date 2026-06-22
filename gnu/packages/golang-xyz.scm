@@ -8070,7 +8070,7 @@ signatures.")
 (define-public go-github-com-cyphar-filepath-securejoin
   (package
     (name "go-github-com-cyphar-filepath-securejoin")
-    (version "0.6.1")
+    (version "0.7.0")
     (source
      (origin
        (method git-fetch)
@@ -8079,11 +8079,10 @@ signatures.")
              (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "13n9mi04gizc61ccgvxv8c59qxjqlbsjidkrwvh0h2mrgda1psng"))))
+        (base32 "1rjmkrzrn2q9wnaay4f0vxsj3xbvrx590idzsywlnnxr3qb8ka03"))))
     (build-system go-build-system)
     (arguments
      (list
-      #:test-flags #~(list "-timeout=30m" "-shuffle=on" "-v")
       #:import-path "github.com/cyphar/filepath-securejoin"))
     (native-inputs
      (list go-github-com-stretchr-testify))
@@ -8094,10 +8093,9 @@ signatures.")
     (description
      "Package securejoin is an implementation of the
 hopefully-soon-to-be-included @code{SecureJoin} helper that is meant to be
-part of the \"path/filepath\" package.  The purpose of this project is to
+part of the @code{path/filepath} package.  The purpose of this project is to
 provide a @code{PoC} implementation to make the @code{SecureJoin} proposal
-(@url{https://github.com/golang/go/issues/20126,https://github.com/golang/go/issues/20126})
-more tangible.")
+(@url{https://github.com/golang/go/issues/20126}) more tangible.")
     (license license:bsd-3)))
 
 ;; For umoci@1.6.0, remove when a fresh version is released.
