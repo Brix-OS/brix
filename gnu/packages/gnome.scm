@@ -7653,7 +7653,8 @@ principles are simplicity and standards compliance.")
            pkg-config))
     (inputs
      (list gtk
-           libadwaita))
+           libadwaita
+           libdex))
     (home-page "https://gitlab.gnome.org/GNOME/d-spy")
     (synopsis "D-Bus debugger")
     (description
