@@ -174,9 +174,9 @@ to the corresponding bytevector, doing it at compile time when possible."
   ;; before that commit cannot be merged or it will be rejected by 'guix pull'
   ;; & co.
   (make-channel-introduction
-   "9edb3f66fd807b096b48283debdcddccfea34bad"     ;2020-05-26
-   (openpgp-fingerprint                           ;mbakke
-    "BBB0 2DDF 2CEA F6A8 0D1D  E643 A2A0 6DF2 A33A 54FA")))
+   "19388906e59b1dce9a95cd6f8a29a7f8bbd5d395"     ;2026-06-23
+   (openpgp-fingerprint                           ;khalid
+    "B8E6 AB25 3C7B D049 F5DD  E18F 9BE2 DF28 6999 F740")))
 
 (define %default-channel-url
   ;; URL of the default 'guix' channel.
