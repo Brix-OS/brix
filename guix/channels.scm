@@ -180,7 +180,7 @@ to the corresponding bytevector, doing it at compile time when possible."
 
 (define %default-channel-url
   ;; URL of the default 'guix' channel.
-  "https://git.guix.gnu.org/guix.git")
+  "https://git.khalidrafi.tech/brix.git")
 
 (define %default-guix-channel
   (channel
