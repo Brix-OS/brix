@@ -243,7 +243,7 @@ VERSION is the target version of the boot-parameters record."
   this-operating-system
 
   (kernel operating-system-kernel                 ; package
-          (default linux-libre))
+          (default linux))
   (kernel-loadable-modules operating-system-kernel-loadable-modules
                     (default '()))                ; list of packages
   (kernel-arguments operating-system-user-kernel-arguments
