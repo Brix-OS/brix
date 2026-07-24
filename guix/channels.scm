@@ -203,8 +203,8 @@ to the corresponding bytevector, doing it at compile time when possible."
 
 (define %default-channels
   ;; Default list of channels.
-  (list %default-guix-channel
-        %nonguix-channel))
+  (list %nonguix-channel
+        %default-guix-channel))
 
 (define (guix-channel? channel)
   "Return true if CHANNEL is the 'guix' channel."
