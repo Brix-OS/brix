@@ -35,8 +35,7 @@
       (uri (git-reference
              (url "https://gitlab.com/brix-os/artwork")
              (commit commit)))
-      (file-name (string-append "guix-artwork-" (string-take commit 7)
-                                "-checkout"))
+      (file-name (string-append "guix-artwork-master-checkout"))
       (sha256
        (base32
         "0v6hy9fkq6f2v8cw2ipsd401cz7r2pxx8pmvrg1rv0247nhvcjkg")))))
