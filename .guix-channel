@@ -4,4 +4,4 @@
   (version 0)
   (news-file "etc/news.scm")
   (keyring-reference "keyring")
-  (url "https://git.guix.gnu.org/guix.git")) ;the primary URL
+  (url "https://gitlab.com/brix-os/brix.git")) ;the primary URL
