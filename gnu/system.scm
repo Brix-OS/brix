@@ -33,6 +33,7 @@
 ;;; along with GNU Guix.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (gnu system)
+  #:use-module (nongnu packages linux) ;; for standard Linux kernel
   #:use-module (guix inferior)
   #:use-module (guix store)
   #:use-module (guix memoization)
