@@ -2081,7 +2081,7 @@ and data directories to ~a:~a...~%"
   guix-configuration make-guix-configuration
   guix-configuration?
   (guix             guix-configuration-guix       ;file-like
-                    (default guix))
+                    (default (guix-for-channels %default-channels))
   (build-group      guix-configuration-build-group ;string
                     (default "guixbuild"))
   (build-accounts   guix-configuration-build-accounts ;integer
