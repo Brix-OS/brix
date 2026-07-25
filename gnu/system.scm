@@ -33,7 +33,6 @@
 ;;; along with GNU Guix.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (gnu system)
-  #:use-module (nongnu packages linux) ;; for standard Linux kernel
   #:use-module (guix inferior)
   #:use-module (guix store)
   #:use-module (guix memoization)
@@ -244,7 +243,7 @@ VERSION is the target version of the boot-parameters record."
   this-operating-system
 
   (kernel operating-system-kernel                 ; package
-          (default linux))
+          (default (specification->package "linux")))
   (kernel-loadable-modules operating-system-kernel-loadable-modules
                     (default '()))                ; list of packages
   (kernel-arguments operating-system-user-kernel-arguments
