@@ -48,6 +48,7 @@
   #:use-module (guix i18n)
   #:use-module (guix diagnostics)
   #:use-module (guix ui)
+  #:use-module (gnu packages) ;; for specification->package
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages bash)
