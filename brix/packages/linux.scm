@@ -33,6 +33,7 @@
 
 (define-module (brix packages linux)
   #:use-module (gnu packages)
+  #:use-module (brix packages)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages compression)
@@ -69,8 +70,8 @@
                        "/linux/kernel/v" (version-major version) ".x"
                        "/linux-" version ".tar.xz"))
 
-(define-public (nonguix-extra-linux-options linux-or-version)
-  "Return a list containing additional options that nonguix sets by default
+(define-public (brix-extra-linux-options linux-or-version)
+  "Return a list containing additional options that brix sets by default
 for a corrupted linux package of specified version.  linux-or-version can be
 some freedo package or an output of package-version procedure."
   (define linux-version
