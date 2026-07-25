@@ -84,7 +84,7 @@ some freedo package or an output of package-version procedure."
                        (cons* (cdr opt) opts)
                        opts))
                  '()
-                 ;; List of additional options for nonguix corrupted linux.
+                 ;; List of additional options for brix corrupted linux.
                  ;; Each member is a pair of a minimal version (>=) and the
                  ;; option itself.  Option has to be in a format suitable for
                  ;; (@ (guix build kconfig) modify-defconfig) procedure.
@@ -112,8 +112,8 @@ some freedo package or an output of package-version procedure."
                         #:key
                         (name "linux")
                         (configs "")
-                        (defconfig "nonguix_defconfig")
-                        (get-extra-configs nonguix-extra-linux-options)
+                        (defconfig "brix_defconfig")
+                        (get-extra-configs brix-extra-linux-options)
                         modconfig)
 
   ;; TODO: This very directly depends on guix internals.
@@ -158,10 +158,10 @@ some freedo package or an output of package-version procedure."
               #~(modify-phases #$phases
                   ;; Make sure the resulted package is compatible with
                   ;; ‘customize-linux’.
-                  (add-before 'configure 'nonguix-configure
+                  (add-before 'configure 'brix-configure
                     (lambda args
                       (let ((defconfig
-                             (format #f "arch/~a/configs/nonguix_defconfig"
+                             (format #f "arch/~a/configs/brix_defconfig"
                                      #$(linux-srcarch))))
                         (apply (assoc-ref #$phases 'configure) args)
                         (modify-defconfig
