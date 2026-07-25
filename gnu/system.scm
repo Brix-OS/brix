@@ -48,7 +48,7 @@
   #:use-module (guix i18n)
   #:use-module (guix diagnostics)
   #:use-module (guix ui)
-  #:use-module (gnu packages) ;; for specification->package
+  #:use-module (brix packages linux) ;; for standard linux kernel
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages bash)
@@ -244,7 +244,7 @@ VERSION is the target version of the boot-parameters record."
   this-operating-system
 
   (kernel operating-system-kernel                 ; package
-          (default (specification->package "linux")))
+          (default linux))
   (kernel-loadable-modules operating-system-kernel-loadable-modules
                     (default '()))                ; list of packages
   (kernel-arguments operating-system-user-kernel-arguments
