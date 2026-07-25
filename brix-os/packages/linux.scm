@@ -31,9 +31,9 @@
 ;;; Copyright © 2025 Murilo <murilo@disroot.org>
 ;;; Copyright © 2025 dan <i@dan.games>
 
-(define-module (brix packages linux)
+(define-module (brix-os packages linux)
   #:use-module (gnu packages)
-  #:use-module (brix packages)
+  #:use-module (brix-os packages)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages compression)

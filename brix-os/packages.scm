@@ -2,7 +2,7 @@
 ;;; Copyright © 2015, 2018 Ludovic Courtès <ludo@gnu.org>
 ;;; Copyright © 2025 Maxim Cournoyer <maxim.cournoyer@gmail.com>
 
-(define-module (brix packages)
+(define-module (brix-os packages)
   #:use-module (gnu packages)
   #:use-module (guix diagnostics)
   #:use-module (guix discovery)
@@ -14,9 +14,9 @@
   #:use-module (srfi srfi-34)
   #:replace (%patch-path
              search-patch)
-  #:export (brix-patches
-            %brix-package-module-path
-            all-brix-packages))
+  #:export (brix-os-patches
+            %brix-os-package-module-path
+            all-brix-os-packages))
 
 ;;; Commentary:
 ;;;
@@ -26,7 +26,7 @@
 ;;;
 ;;; Code:
 
-(define %brix-root-directory
+(define %brix-os-root-directory
   ;; This is like %distro-root-directory from (gnu packages), with adjusted
   ;; paths.
   (letrec-syntax ((dirname* (syntax-rules ()
@@ -43,19 +43,19 @@
                                   (dirname* absolute things ...))))
                               ((_)
                                #f))))
-    (try ("brix/packages/linux.scm" brix/ packages/)
-         ("brix/packages.scm" brix/))))
+    (try ("brix-os/packages/linux.scm" brix-os/ packages/)
+         ("brix-os/packages.scm" brix-os/))))
 
-(define %brix-package-module-path
-  `((,%brix-root-directory . "brix/packages")))
+(define %brix-os-package-module-path
+  `((,%brix-os-root-directory . "brix-os/packages")))
 
 (define %patch-path
   ;; Define it after '%package-module-path' so that '%load-path' contains user
   ;; directories, allowing patches in $GUIX_PACKAGE_PATH to be found.
   (make-parameter
    (map (lambda (directory)
-          (if (string=? directory %brix-root-directory)
-              (string-append directory "/brix/packages/patches")
+          (if (string=? directory %brix-os-root-directory)
+              (string-append directory "/brix-os/packages/patches")
               directory))
         %load-path)))
 
@@ -69,13 +69,13 @@
 
 ;;; XXX: `search-patches' being syntax, it can't be overridden by the module
 ;;; system, or so it seems, so we simply rename it.
-(define-syntax-rule (brix-patches file-name ...)
+(define-syntax-rule (brix-os-patches file-name ...)
   "Return the list of absolute file names corresponding to each
 FILE-NAME found in %PATCH-PATH."
   (list (search-patch file-name) ...))
 
 ;; Adapted from (@ (gnu packages) all-packages).
-(define all-brix-packages
+(define all-brix-os-packages
   (mlambda ()
     "Return the list of all public packages, including replacements and hidden
 packages, excluding superseded packages."
@@ -96,6 +96,6 @@ packages, excluding superseded packages."
                              (#f
                               (cons package result))))))
                    '()
-                   (all-modules %brix-package-module-path #:warn warn-about-load-error)
+                   (all-modules %brix-os-package-module-path #:warn warn-about-load-error)
                    ;; Dismiss deprecated packages but keep hidden packages.
                    #:select? (negate package-superseded))))
