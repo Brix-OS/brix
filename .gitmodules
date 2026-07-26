@@ -1,0 +1,3 @@
+[submodule "nonguix-channel"]
+	path = nonguix-channel
+	url = https://gitlab.com/nonguix/nonguix.git
