@@ -48,7 +48,7 @@
   #:use-module (guix i18n)
   #:use-module (guix diagnostics)
   #:use-module (guix ui)
-  #:use-module (nongnu packages linux) ;; for standard linux kernel
+  #:use-module (gnu packages linux-nonfree) ;; for standard linux kernel
   #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages bash)
@@ -265,7 +265,10 @@ VERSION is the target version of the boot-parameters record."
                   (default %base-initrd-modules))
 
   (firmware operating-system-firmware             ; list of packages
-            (default %base-firmware))
+            (default (delete-duplicates
+                      (append
+                       (list linux-firmware)
+                      %base-firmware))))
 
   (host-name operating-system-host-name)          ; string
   (hosts-file %operating-system-hosts-file         ; deprecated
