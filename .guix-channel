@@ -6,7 +6,8 @@
  (keyring-reference "keyring")
  (dependencies
   (channel
-   (name 'nonguix)
+   (name nonguix)
+   (version 0)
    (url "https://gitlab.com/nonguix/nonguix")
    (channel-introduction
     (commit
