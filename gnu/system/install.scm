@@ -25,8 +25,8 @@
 ;;; along with GNU Guix.  If not, see <http://www.gnu.org/licenses/>.
 
 (define-module (gnu system install)
-  #:use-module (nonguix transformations)
-  #:use-module (nongnu packages linux)
+  #:use-module (guix transformations)
+  #:use-module (gnu packages linux-nonfree)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu)
   #:use-module (gnu system)
@@ -700,10 +700,6 @@ or by starting the installer, using `guix-system-installer` command.
                                ;; When #f, use hybrid grub that sets up
                                ;; both legacy boot and efi.
                                (efi-only? #f))
-
-  ;; Add nonguix to the image
-  (compose ;; FIXME: ‘microcode-initrd’ results in unbootable live system.
-           (nonguix-transformation-linux #:initrd base-initrd))
 
   ;; The operating system used on installation images for USB sticks etc.
   (operating-system
