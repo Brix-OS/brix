@@ -5,15 +5,15 @@
 (use-modules (gnu))
 
 (operating-system
-  (host-name "komputilo")
-  (timezone "Europe/Berlin")
-  (locale "en_US.utf8")
+  (host-name "brix-os")
+  (timezone "Asia/Makkah")
+  (locale "en_GB.utf8")
 
   ;; This is where user accounts are specified.  The "root" account is
   ;; implicit, and is initially created with the empty password.
   (users (cons (user-account
-                (name "alice")
-                (comment "Bob's sister")
+                (name "brix")
+                (comment "Build your bricks!")
                 (group "users")
                 (supplementary-groups '("wheel"
                                         "audio" "video")))
