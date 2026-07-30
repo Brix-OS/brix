@@ -179,7 +179,7 @@ NODE's modules, under their FHS directories: share/guile/site and lib/guile."
                            (('guix 'config)
                             #f)
                            ((and module
-                                 (or ('guix _ ...) ('gnu _ ...)))
+                                 (or ('guix _ ...) ('gnu _ ...) ('nonguix _ ...) ('nongnu _ ...)))
                             (not (member module except)))
                            (rest #f))))
 
@@ -984,7 +984,8 @@ itself."
                    ,@(scheme-modules* source "gnu/system")
                    ,@(scheme-modules* source "gnu/services")
                    ,@(scheme-modules* source "gnu/machine")
-                   ,@(scheme-modules* source "guix/platforms/"))
+                   ,@(scheme-modules* source "guix/platforms/")
+                   )
                  (list *core-package-modules* *package-modules*
                        *extra-modules* *core-modules*)
                  #:extensions dependencies
