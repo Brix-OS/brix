@@ -1,0 +1,87 @@
+name: Brix CI — Pull then Build
+
+on:
+  push:
+    branches: [ci-image]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Pull Brix then Build from Git
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Brix
+        uses: brix-os/brix-action@v1
+        with:
+          pullAfterInstall: false
+
+      - name: Describe Brix
+        run: |
+          /var/guix/profiles/per-user/root/current-guix/bin/guix describe
+          
+      - name: Configure Brix + Nonguix channels
+        run: |
+          mkdir -p ~/.config/guix
+          cat > ~/.config/guix/channels.scm <<'EOF'
+          (cons*
+            (channel
+              (name 'nonguix)
+              (url "https://gitlab.com/nonguix/nonguix")
+              (introduction
+                (make-channel-introduction
+                  "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
+                  (openpgp-fingerprint
+                    "2A39 3FFF 68F4 EF7A 3D29 12AF 6F51 20A0 22FB B2D5"))))
+            (channel
+              (name 'guix)
+              (url "https://github.com/brix-os/brix.git")
+              (branch "ci-image"))
+            %default-channels)
+          EOF
+
+      - name: Authorize Nonguix substitutes
+        run: |
+          wget -q https://substitutes.nonguix.org/signing-key.pub -O /tmp/nonguix.pub
+          sudo /var/guix/profiles/per-user/root/current-guix/bin/guix archive --authorize < /tmp/nonguix.pub
+
+      - name: Guix pull
+        env:
+          GUIX_LOCPATH: /var/guix/profiles/per-user/root/guix-profile/lib/locale
+          LC_ALL: en_US.utf8
+        run: |
+          /var/guix/profiles/per-user/root/current-guix/bin/guix describe
+          /var/guix/profiles/per-user/root/current-guix/bin/guix pull --allow-downgrades --disable-authentication \
+            --substitute-urls="https://bordeaux.guix.gnu.org https://ci.guix.gnu.org https://substitutes.nonguix.org" \
+            -M 5
+
+      # - name: Checkout repository
+      #   uses: actions/checkout@v7
+
+      - name: Release pulled Guix binary
+        run: |
+          /var/guix/profiles/per-user/root/current-guix/bin/guix describe
+          GUIX_PROFILE="$HOME/.config/guix/current"
+          . "$GUIX_PROFILE/etc/profile"
+          $GUIX_PROFILE/bin/guix describe
+          $GUIX_PROFILE/bin/guix pack -s x86_64-linux --localstatedir \
+          --profile-name= --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
+          cp -L brix-binary brix-binary-master.x86_64-linux.tar.xz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: brix-binary-master
+          path: brix-binary-master.x86_64-linux.tar.xz
+          archive: false
+          
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          files: brix-binary-master.x86_64-linux.tar.xz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref_type == 'tag'
