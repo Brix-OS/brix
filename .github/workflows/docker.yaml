@@ -71,11 +71,6 @@ jobs:
           --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
           cp -L brix-binary brix-binary-master.x86_64-linux.tar.xz
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: brix-binary-master
-          path: brix-binary-master.x86_64-linux.tar.xz
       - name: Release to GitHub
         uses: softprops/action-gh-release@v3
         with:
@@ -83,4 +78,4 @@ jobs:
          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: github.ref_type == 'tag'
+
