@@ -1,4 +1,4 @@
-name: Brix CI — Pull then Build
+name: Brix CI — Pull then Pack
 
 on:
   push:
