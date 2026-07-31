@@ -67,7 +67,6 @@ jobs:
           . "$GUIX_PROFILE/etc/profile"
           $GUIX_PROFILE/bin/guix describe
           sudo systemctl restart guix-daemon
-          export GUIX_BUILD_OPTIONS="--allow-downgrades --disable-authentication -M 5"
           $GUIX_PROFILE/bin/guix pack -s x86_64-linux --localstatedir \
           --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
           cp -L brix-binary brix-binary-master.x86_64-linux.tar.xz
@@ -83,7 +82,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: brix-binary-master.x86_64-linux.tar.xz
-          generate_release_notes: true
+         generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.ref_type == 'tag'
