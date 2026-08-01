@@ -1,0 +1,181 @@
+name: Brix CI — Pull then Pack
+
+on:
+  push:
+    branches: [ci-testing]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Pull Brix then Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install Brix
+        uses: brix-os/brix-action@v1
+        with:
+          pullAfterInstall: false
+
+      - name: Test Brix
+        run: which brix
+          
+      - name: Describe Brix
+        run: |
+          /var/guix/profiles/per-user/root/current-guix/bin/guix describe
+
+      - name: Configure Brix + Nonguix channels
+        run: |
+          mkdir -p ~/.config/guix
+          cat > ~/.config/guix/channels.scm <<'EOF'
+          (cons*
+            (channel
+              (name 'nonguix)
+              (url "https://gitlab.com/nonguix/nonguix")
+              (introduction
+                (make-channel-introduction
+                  "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
+                  (openpgp-fingerprint
+                    "2A39 3FFF 68F4 EF7A 3D29 12AF 6F51 20A0 22FB B2D5"))))
+            (channel
+              (name 'guix)
+              (url "https://github.com/brix-os/brix.git")
+              (branch "ci-testing"))
+            %default-channels)
+          EOF
+
+      - name: Check if pull is needed
+        id: check-pull
+        run: |
+          INSTALLED_COMMIT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe | \
+            grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
+          HEAD_COMMIT=$(git rev-parse HEAD)
+          echo "installed_commit=$INSTALLED_COMMIT" >> $GITHUB_OUTPUT
+          echo "head_commit=$HEAD_COMMIT" >> $GITHUB_OUTPUT
+          
+          if [ "$INSTALLED_COMMIT" = "$HEAD_COMMIT" ]; then
+            echo "pull_needed=false" >> $GITHUB_OUTPUT
+            echo "Installed commit matches HEAD. Nothing to do."
+            exit 0
+          fi
+          
+          CHANGED_FILES=$(git diff --name-only "$INSTALLED_COMMIT" HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          NON_CI=$(echo "$CHANGED_FILES" | grep -v '^\.github/workflows/' | grep -v '^\.gitlab-ci' | grep -v '^README' | grep -v '^ROADMAP' | grep -v '^TODO' | grep -v '^\.gitignore' | grep -v '^\.github/' || true)
+          
+          if [ -z "$NON_CI" ]; then
+            echo "pull_needed=false" >> $GITHUB_OUTPUT
+            echo "Only CI/docs files changed. Skipping pull and rebuild."
+          else
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Source files changed. Pull and rebuild required."
+          fi
+          
+      - name: Guix pull
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        env:
+          GUIX_LOCPATH: /var/guix/profiles/per-user/root/guix-profile/lib/locale
+          LC_ALL: en_US.utf8
+        run: |
+          /var/guix/profiles/per-user/root/current-guix/bin/guix describe
+          /var/guix/profiles/per-user/root/current-guix/bin/guix pull --allow-downgrades -M 6
+
+      - name: Pack pulled Guix binary
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          sudo systemctl restart guix-daemon
+          brix pack -s x86_64-linux --localstatedir \
+            --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
+          cp -L brix-binary brix-binary-testing.x86_64-linux.tar.xz
+
+      - name: Release binary to GitHub
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: brix-binary-testing.x86_64-linux.tar.xz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker image
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix system image --image-type=docker --network --root=$HOME/brix-docker ./gnu/system/examples/docker-image.tmpl -M 6
+          cp -L $HOME/brix-docker brix-docker-testing.tar.gz
+
+      - name: Release Docker image to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-docker-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+          
+      - name: Generate WSL image
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix system image --image-type=wsl2 --root=$HOME/brix-wsl2 ./gnu/system/install.scm -M 6
+          cp -L $HOME/brix-wsl2 brix-wsl2-testing.tar.gz
+
+      - name: Release WSL image to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-wsl2-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate ISO image
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix system image --image-type=iso9660 --label=BRIX --root=$HOME/brix-iso ./gnu/system/install.scm -M 6
+          cp -L $HOME/brix-iso brix-iso-testing.tar.gz
+
+      - name: Release ISO image to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-iso-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug SSH on failure
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 30
+        with:
+          limit-access-to-actor: true
