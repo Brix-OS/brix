@@ -48,9 +48,9 @@
   #:use-module (guix i18n)
   #:use-module (guix diagnostics)
   #:use-module (guix ui)
-  ;; #:use-module (gnu packages linux-nonfree) ;; for standard linux kernel
-  #:use-module (nongnu packages linux) ;; for standard linux kernel
-  #:use-module (gnu packages admin)
+  #:use-module (gnu packages linux-nonfree) ;; for standard linux kernel
+;;  #:use-module (nongnu packages linux) ;; for standard linux kernel
+ #:use-module (gnu packages admin)
   #:use-module (gnu packages base)
   #:use-module (gnu packages bash)
   #:use-module ((gnu packages nss) #:select (nss-certs))
