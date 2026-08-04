@@ -128,7 +128,7 @@ jobs:
           brix describe
 
       - name: Export Guix profile
-        # if: steps.check-pull.outputs.pull_needed == 'true'
+        if: steps.check-pull.outputs.pull_needed == 'true'
         run: |
           if [ -d "$HOME/.config/guix/current" ]; then
             BRIX_PROFILE="$HOME/.config/guix/current"
@@ -140,7 +140,7 @@ jobs:
           cp /etc/guix/signing-key.pub brix-testing-signing-key.pub
 
       - name: Create GitHub Release with commit hash
-        # if: steps.check-pull.outputs.pull_needed == 'true'
+        if: steps.check-pull.outputs.pull_needed == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: testing
@@ -218,7 +218,6 @@ jobs:
           -f docker \
           --max-layers=8
           cp -L brix-ci brix-ci-base.tar.gz
-          docker load < brix-ci-base.tar.gz
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -236,6 +235,7 @@ jobs:
 
       - name: Build and push CI image
         run: |
+          docker load < brix-ci-base.tar.gz
           docker build \
             -t ghcr.io/brix-os/brix-ci:testing \
             -f .github/workflows/Dockerfile \
