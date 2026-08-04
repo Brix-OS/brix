@@ -2,7 +2,9 @@
 ;; This is an operating system configuration template for a "Docker image"
 ;; setup, so it has barely any services at all.
 
-(use-modules (gnu))
+(use-modules (gnu)
+             (gnu services base)
+             (srfi srfi-1))
 
 (operating-system
   (host-name "brix-os")
@@ -38,10 +40,22 @@
                (bootloader grub-bootloader)
                (targets '("does-not-matter"))))
   ;; This will be ignored, too.
-  (file-systems (list (file-system
-                        (device "does-not-matter")
-                        (mount-point "/")
-                        (type "does-not-matter"))))
+  (file-systems (cons* (file-system
+                         (device "/dev/null")
+                         (mount-point "/")
+                         (type "dummy")
+                         (check? #f)
+                         (mount-may-fail? #t))
+                       %base-file-systems))
 
   ;; Guix is all you need!
-  (services (list (service guix-service-type))))
+  (services (remove (lambda (service)
+              (member (service-kind service)
+                      (list
+                       login-service-type
+                       virtual-terminal-service-type
+                       console-font-service-type
+                       agetty-service-type
+                       mingetty-service-type)
+                      ))
+            %base-services)))
