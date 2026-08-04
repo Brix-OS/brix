@@ -201,7 +201,7 @@ jobs:
             BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           . "$BRIX_PROFILE/etc/profile"
-          brix pack guix bash-minimal coreutils-minimal net-base shadow nss-certs \
+          brix pack guix bash-minimal coreutils-minimal net-base shadow nss-certs wget \
           --root=brix-ci --image-tag=brix-ci-base \
           --save-provenance \
           -S /bin=bin \
