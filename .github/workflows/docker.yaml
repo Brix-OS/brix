@@ -136,28 +136,28 @@ jobs:
             BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           . "$BRIX_PROFILE/etc/profile"
-          brix archive --export -r $(readlink -f $BRIX_PROFILE) > brix-current.nar
+          brix archive --export -r $(readlink -f $BRIX_PROFILE) > brix-testing.nar
           cp /etc/guix/signing-key.pub brix-testing-signing-key.pub
 
       - name: Create GitHub Release with commit hash
         # if: steps.check-pull.outputs.pull_needed == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ci-${{ env.SHORT_SHA }}
-          name: "Brix CI ${{ env.SHORT_SHA }}"
+          tag_name: testing
+          # name: "Brix CI ${{ env.SHORT_SHA }}"
           body: |
             - **Commit:** `${{ github.sha }}`
 
-            Download `brix-current.nar` and `brix-testing-signing-key.pub` to import
+            Download `brix-testing.nar` and `brix-testing-signing-key.pub` to import
             this exact Brix revision on your machine without running `brix pull`:
 
             ```bash
-            sudo brix archive --authorize < ci-signing-key.pub
-            sudo brix archive --import < brix-current.nar
+            sudo brix archive --authorize < brix-testing-signing-key.pub
+            sudo brix archive --import < brix-testing.nar
             ```
           generate_release_notes: true
           files: |
-            brix-current.nar
+            brix-testing.nar
             brix-testing-signing-key.pub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -227,20 +227,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .github/workflows/
-          push: true
-          tags: brix-os/brix-ci:testing
+      # - name: Build and push
+      #   uses: docker/build-push-action@v7
+      #   with:
+      #     context: .github/workflows/
+      #     push: true
+      #     tags: brix-os/brix-ci:testing
 
-      # - name: Load pack and build CI image
-      #   run: |
-      #     docker build \
-      #       --build-arg BASE_IMAGE=brix-ci-base:testing \
-      #       -t brix-ci:testing \
-      #       -f ./github/workflows/Dockerfile \
-      #       ./github/workflows/
+      - name: Build and push CI image
+        run: |
+          docker build \
+            -t ghcr.io/brix-os/brix-ci:testing \
+            -f .github/workflows/Dockerfile \
+            .github/workflows/
+          docker push ghcr.io/brix-os/brix-ci:testing
 
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
