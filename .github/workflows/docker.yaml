@@ -210,6 +210,14 @@ jobs:
           --max-layers=8
           cp -L brix-ci brix-ci-base.tar.gz
 
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: brix-ci-base
+          path: brix-ci-base.tar.gz
+          archive: false
+
+          
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
