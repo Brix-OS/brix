@@ -1,4 +1,4 @@
-FROM brix-ci-base:testing
+FROM brix-ci-base:latest
 
 # 1. groupadd --gid 0 root
 # 2. useradd --uid 0 --gid root --shell /bin/sh --home-dir / --system root
