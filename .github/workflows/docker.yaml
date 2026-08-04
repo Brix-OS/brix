@@ -41,11 +41,12 @@ jobs:
         run: |
           mkdir -p ~/.config/guix
           cat > ~/.config/guix/channels.scm <<'EOF'
-          (list
+          (cons
            (channel
             (name 'guix)
             (url "https://github.com/brix-os/brix.git")
-            (branch "ci-testing")))
+            (branch "ci-testing"))
+            %default-channels)
           EOF
 
       - name: Check if pull is needed
