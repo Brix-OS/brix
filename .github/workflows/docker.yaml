@@ -205,7 +205,6 @@ jobs:
           --save-provenance \
           -S /bin=bin \
           -S /share=share \
-          -S /etc=etc \
           -f docker \
           --max-layers=8
           cp -L brix-ci brix-ci-base.tar.gz
