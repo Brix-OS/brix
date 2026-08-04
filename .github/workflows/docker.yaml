@@ -54,15 +54,38 @@ jobs:
       - name: Check if pull is needed
         id: check-pull
         run: |
-          INSTALLED_COMMIT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe | \
-            grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
+          set -euo pipefail
+          
+          DESCRIBE_OUTPUT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe 2>/dev/null || true)
+          if [ -z "$DESCRIBE_OUTPUT" ]; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "guix describe failed or returned empty. Assuming pull required."
+            exit 0
+          fi
+          
+          INSTALLED_COMMIT=$(echo "$DESCRIBE_OUTPUT" | grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
           HEAD_COMMIT=$(git rev-parse HEAD)
           echo "installed_commit=$INSTALLED_COMMIT" >> $GITHUB_OUTPUT
           echo "head_commit=$HEAD_COMMIT" >> $GITHUB_OUTPUT
           
+          if [ -z "$INSTALLED_COMMIT" ]; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Could not extract installed commit from guix describe. Assuming pull required."
+            exit 0
+          fi
+          
           if [ "$INSTALLED_COMMIT" = "$HEAD_COMMIT" ]; then
             echo "pull_needed=false" >> $GITHUB_OUTPUT
             echo "Installed commit matches HEAD. Nothing to do."
+            exit 0
+          fi
+          
+          # Guard: if installed commit isn't in this repo, we can't diff.
+          # This happens when the installed binary/substitute references a
+          # commit that was force-pushed away or built from a different channel.
+          if ! git rev-parse --quiet --verify "$INSTALLED_COMMIT^{commit}" >/dev/null 2>&1; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Installed commit $INSTALLED_COMMIT not found in repo history. Pull and rebuild required."
             exit 0
           fi
           
