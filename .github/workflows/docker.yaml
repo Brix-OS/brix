@@ -136,7 +136,6 @@ jobs:
             BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           . "$BRIX_PROFILE/etc/profile"
-          brix archive --generate-key
           brix archive --export -r $(readlink -f $BRIX_PROFILE) > brix-current.nar
           cp /etc/guix/signing-key.pub brix-testing-signing-key.pub
 
