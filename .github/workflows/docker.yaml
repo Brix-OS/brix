@@ -119,7 +119,7 @@ jobs:
           /var/guix/profiles/per-user/root/current-guix/bin/guix pull --allow-downgrades -M 6
 
       - name: Test Pulled Brix
-        # if: steps.check-pull.outputs.pull_needed == 'true'
+        if: steps.check-pull.outputs.pull_needed == 'true'
         run: |
           GUIX_PROFILE="$HOME/.config/guix/current"
           . "$GUIX_PROFILE/etc/profile"
