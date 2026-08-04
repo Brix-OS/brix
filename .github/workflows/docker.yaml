@@ -130,10 +130,14 @@ jobs:
       - name: Export Guix profile
         # if: steps.check-pull.outputs.pull_needed == 'true'
         run: |
-          BRIX_PROFILE="$HOME/.config/guix/current"
+          if [ -d "$HOME/.config/guix/current" ]; then
+            BRIX_PROFILE="$HOME/.config/guix/current"
+          else
+            BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
           . "$BRIX_PROFILE/etc/profile"
           brix archive --generate-key
-          brix archive --export -r $(readlink -f ~/.config/guix/current) > brix-current.nar
+          brix archive --export -r $(readlink -f $BRIX_PROFILE) > brix-current.nar
           cp /etc/guix/signing-key.pub brix-testing-signing-key.pub
 
       - name: Create GitHub Release with commit hash
@@ -201,11 +205,11 @@ jobs:
       - name: Generate Docker base for CI
         run: |
           if [ -d "$HOME/.config/guix/current" ]; then
-            GUIX_PROFILE="$HOME/.config/guix/current"
+            BRIX_PROFILE="$HOME/.config/guix/current"
           else
-            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+            BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
-          . "$GUIX_PROFILE/etc/profile"
+          . "$BRIX_PROFILE/etc/profile"
           brix pack guix bash-minimal coreutils-minimal net-base shadow nss-certs \
           --root=brix-ci --image-tag=brix-ci-base:testing \
           --save-provenance \
