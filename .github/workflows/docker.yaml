@@ -131,47 +131,75 @@ jobs:
             brix-docker-testing.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+
+
+      - name: Generate Docker Pack
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix pack --root=brix-pack guix bash-minimal coreutils-minimal grep net-base \
+          --save-provenance \
+          -S /bin=bin \
+          -S /share=share \
+          -S /etc=etc \
+          -f docker \
+          --max-layers=100
+          cp -L brix-pack brix-docker-pack-testing.tar.gz
+
+      - name: Release Docker pack to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-docker-pack-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+
           
-      - name: Generate WSL image
-        run: |
-          if [ -d "$HOME/.config/guix/current" ]; then
-            GUIX_PROFILE="$HOME/.config/guix/current"
-          else
-            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-          fi
-          . "$GUIX_PROFILE/etc/profile"
-          brix system image --image-type=wsl2 --root=$HOME/brix-wsl2 ./gnu/system/install.scm -M 6
-          cp -L $HOME/brix-wsl2 brix-wsl2-testing.tar.gz
+      # - name: Generate WSL image
+      #   run: |
+      #     if [ -d "$HOME/.config/guix/current" ]; then
+      #       GUIX_PROFILE="$HOME/.config/guix/current"
+      #     else
+      #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+      #     fi
+      #     . "$GUIX_PROFILE/etc/profile"
+      #     brix system image --image-type=wsl2 --root=$HOME/brix-wsl2 ./gnu/system/install.scm -M 6
+      #     cp -L $HOME/brix-wsl2 brix-wsl2-testing.tar.gz
 
-      - name: Release WSL image to GitHub
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: testing
-          files: |
-            brix-wsl2-testing.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Release WSL image to GitHub
+      #   uses: softprops/action-gh-release@v3
+      #   with:
+      #     tag_name: testing
+      #     files: |
+      #       brix-wsl2-testing.tar.gz
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate ISO image
-        if: steps.check-pull.outputs.pull_needed == 'true'
-        run: |
-          if [ -d "$HOME/.config/guix/current" ]; then
-            GUIX_PROFILE="$HOME/.config/guix/current"
-          else
-            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-          fi
-          . "$GUIX_PROFILE/etc/profile"
-          brix system image --image-type=iso9660 --label=BRIX --root=$HOME/brix-iso ./gnu/system/install.scm -M 6
-          cp -L $HOME/brix-iso brix-iso-testing.tar.gz
+      # - name: Generate ISO image
+      #   if: steps.check-pull.outputs.pull_needed == 'true'
+      #   run: |
+      #     if [ -d "$HOME/.config/guix/current" ]; then
+      #       GUIX_PROFILE="$HOME/.config/guix/current"
+      #     else
+      #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+      #     fi
+      #     . "$GUIX_PROFILE/etc/profile"
+      #     brix system image --image-type=iso9660 --label=BRIX --root=$HOME/brix-iso ./gnu/system/install.scm -M 6
+      #     cp -L $HOME/brix-iso brix-iso-testing.tar.gz
 
-      - name: Release ISO image to GitHub
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: testing
-          files: |
-            brix-iso-testing.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Release ISO image to GitHub
+      #   uses: softprops/action-gh-release@v3
+      #   with:
+      #     tag_name: testing
+      #     files: |
+      #       brix-iso-testing.tar.gz
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debug SSH on failure
         if: failure()
