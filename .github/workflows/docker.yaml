@@ -119,29 +119,97 @@ jobs:
           which brix
           ls -l $(which brix)
           brix describe
-          echo "Testing guix"
-          guix describe
           
-      # - name: Pack pulled Guix binary
-      #   if: steps.check-pull.outputs.pull_needed == 'true'
-      #   run: |
-      #     GUIX_PROFILE="$HOME/.config/guix/current"
-      #     . "$GUIX_PROFILE/etc/profile"
-      #     sudo systemctl restart guix-daemon
-      #     brix pack -s x86_64-linux --localstatedir \
-      #       --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
-      #     cp -L brix-binary brix-binary-testing.x86_64-linux.tar.xz
+      - name: Pack pulled Guix binary
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        run: |
+          GUIX_PROFILE="$HOME/.config/guix/current"
+          . "$GUIX_PROFILE/etc/profile"
+          sudo systemctl restart guix-daemon
+          brix pack -s x86_64-linux --localstatedir \
+            --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
+          cp -L brix-binary brix-binary-testing.x86_64-linux.tar.xz
 
-      # - name: Release binary to GitHub
-      #   if: steps.check-pull.outputs.pull_needed == 'true'
+      - name: Release binary to GitHub
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: brix-binary-testing.x86_64-linux.tar.xz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker image
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix system image --image-type=docker --network --root=$HOME/brix-docker ./gnu/system/examples/docker-image.tmpl -M 6
+          cp -L $HOME/brix-docker brix-docker-testing.tar.gz
+
+      - name: Release Docker image to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-docker-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+
+
+      - name: Generate Docker Pack
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix pack guix bash-minimal coreutils-minimal grep net-base \
+          --root=brix-pack \
+          --save-provenance \
+          -S /bin=bin \
+          -S /share=share \
+          -S /etc=etc \
+          -f docker \
+          --max-layers=100
+          cp -L brix-pack brix-docker-pack-testing.tar.gz
+
+      - name: Release Docker pack to GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: |
+            brix-docker-pack-testing.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+
+          
+      # - name: Generate WSL image
+      #   run: |
+      #     if [ -d "$HOME/.config/guix/current" ]; then
+      #       GUIX_PROFILE="$HOME/.config/guix/current"
+      #     else
+      #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+      #     fi
+      #     . "$GUIX_PROFILE/etc/profile"
+      #     brix system image --image-type=wsl2 --root=$HOME/brix-wsl2 ./gnu/system/install.scm -M 6
+      #     cp -L $HOME/brix-wsl2 brix-wsl2-testing.tar.gz
+
+      # - name: Release WSL image to GitHub
       #   uses: softprops/action-gh-release@v3
       #   with:
       #     tag_name: testing
-      #     files: brix-binary-testing.x86_64-linux.tar.xz
+      #     files: |
+      #       brix-wsl2-testing.tar.gz
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Generate Docker image
+      # - name: Generate ISO image
+      #   if: steps.check-pull.outputs.pull_needed == 'true'
       #   run: |
       #     if [ -d "$HOME/.config/guix/current" ]; then
       #       GUIX_PROFILE="$HOME/.config/guix/current"
@@ -149,91 +217,21 @@ jobs:
       #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
       #     fi
       #     . "$GUIX_PROFILE/etc/profile"
-      #     brix system image --image-type=docker --network --root=$HOME/brix-docker ./gnu/system/examples/docker-image.tmpl -M 6
-      #     cp -L $HOME/brix-docker brix-docker-testing.tar.gz
+      #     brix system image --image-type=iso9660 --label=BRIX --root=$HOME/brix-iso ./gnu/system/install.scm -M 6
+      #     cp -L $HOME/brix-iso brix-iso-testing.tar.gz
 
-      # - name: Release Docker image to GitHub
+      # - name: Release ISO image to GitHub
       #   uses: softprops/action-gh-release@v3
       #   with:
       #     tag_name: testing
       #     files: |
-      #       brix-docker-testing.tar.gz
+      #       brix-iso-testing.tar.gz
       #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      # - name: Generate Docker Pack
-      #   run: |
-      #     if [ -d "$HOME/.config/guix/current" ]; then
-      #       GUIX_PROFILE="$HOME/.config/guix/current"
-      #     else
-      #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-      #     fi
-      #     . "$GUIX_PROFILE/etc/profile"
-      #     brix pack guix bash-minimal coreutils-minimal grep net-base \
-      #     --root=brix-pack \
-      #     --save-provenance \
-      #     -S /bin=bin \
-      #     -S /share=share \
-      #     -S /etc=etc \
-      #     -f docker \
-      #     --max-layers=100
-      #     cp -L brix-pack brix-docker-pack-testing.tar.gz
-
-      # - name: Release Docker pack to GitHub
-      #   uses: softprops/action-gh-release@v3
-      #   with:
-      #     tag_name: testing
-      #     files: |
-      #       brix-docker-pack-testing.tar.gz
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
-
-          
-      # # - name: Generate WSL image
-      # #   run: |
-      # #     if [ -d "$HOME/.config/guix/current" ]; then
-      # #       GUIX_PROFILE="$HOME/.config/guix/current"
-      # #     else
-      # #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-      # #     fi
-      # #     . "$GUIX_PROFILE/etc/profile"
-      # #     brix system image --image-type=wsl2 --root=$HOME/brix-wsl2 ./gnu/system/install.scm -M 6
-      # #     cp -L $HOME/brix-wsl2 brix-wsl2-testing.tar.gz
-
-      # # - name: Release WSL image to GitHub
-      # #   uses: softprops/action-gh-release@v3
-      # #   with:
-      # #     tag_name: testing
-      # #     files: |
-      # #       brix-wsl2-testing.tar.gz
-      # #   env:
-      # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # # - name: Generate ISO image
-      # #   if: steps.check-pull.outputs.pull_needed == 'true'
-      # #   run: |
-      # #     if [ -d "$HOME/.config/guix/current" ]; then
-      # #       GUIX_PROFILE="$HOME/.config/guix/current"
-      # #     else
-      # #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-      # #     fi
-      # #     . "$GUIX_PROFILE/etc/profile"
-      # #     brix system image --image-type=iso9660 --label=BRIX --root=$HOME/brix-iso ./gnu/system/install.scm -M 6
-      # #     cp -L $HOME/brix-iso brix-iso-testing.tar.gz
-
-      # # - name: Release ISO image to GitHub
-      # #   uses: softprops/action-gh-release@v3
-      # #   with:
-      # #     tag_name: testing
-      # #     files: |
-      # #       brix-iso-testing.tar.gz
-      # #   env:
-      # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: Debug SSH on failure
-      #   if: failure()
-      #   uses: mxschmitt/action-tmate@v3
-      #   timeout-minutes: 30
-      #   with:
-      #     limit-access-to-actor: true
+      - name: Debug SSH on failure
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 30
+        with:
+          limit-access-to-actor: true
