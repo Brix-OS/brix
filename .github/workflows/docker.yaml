@@ -203,16 +203,18 @@ jobs:
             BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           . "$BRIX_PROFILE/etc/profile"
-          brix pack guix bash-minimal coreutils-minimal net-base shadow nss-certs wget \
-          --root=brix-ci --image-tag=brix-ci-base \
+          brix pack \
+          --expression='(use-modules (gnu packages base) (gnu packages gcc)) (list glibc-for-fhs gcc guix bash-minimal coreutils-minimal net-base shadow nss-certs)' \
           --save-provenance \
-          -S /bin=bin \
-          -S /share=share \
           -S /lib=lib \
-          -S /lib64=lib \
-          -S /usr=. \
+          -S /usr/include=include \
+          -S /sbin=sbin \
+          -S /usr/libexec=libexec \
+          -S /usr/share=share \
           -f docker \
-          --max-layers=8
+          --image-tag=brix-ci-base \
+          --max-layers=8 \
+          --root=brix-ci
           cp -L brix-ci brix-ci-base.tar.gz
 
 
@@ -258,3 +260,51 @@ jobs:
         timeout-minutes: 30
         with:
           limit-access-to-actor: true
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/brix-os/brix-ci:testing
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Debug filesystem
+        shell: sh
+        run: |
+          echo "=== /__e ==="
+          ls -la /__e/ 2>/dev/null || echo "NO /__e"
+          
+          echo "=== /__e/node24/bin/node ==="
+          ls -la /__e/node24/bin/node 2>/dev/null || echo "NO NODE"
+          
+          echo "=== ELF interpreter ==="
+          if [ -f /__e/node24/bin/node ]; then
+            readelf -l /__e/node24/bin/node | grep interpreter
+          fi
+          
+          echo "=== /lib64 ==="
+          ls -la /lib64/ 2>/dev/null || echo "NO /lib64"
+          
+          echo "=== ld-linux ==="
+          find / -name "ld-linux*" -type f 2>/dev/null | head -5
+          
+          echo "=== libstdc++ ==="
+          find / -name "libstdc++.so*" -type f 2>/dev/null | head -5
+          
+          echo "=== /etc/ld.so.cache ==="
+          ls -la /etc/ld.so.cache 2>/dev/null || echo "NO CACHE"
+          
+          echo "=== node test ==="
+          /__e/node24/bin/node --version 2>/dev/null || echo "NODE FAILED"
+
+      - name: Checkout test
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Brix works
+        run: |
+          guix describe
+          brix describe  
