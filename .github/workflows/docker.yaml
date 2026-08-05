@@ -11,6 +11,8 @@ jobs:
   build:
     name: Pull Brix then Release
     runs-on: ubuntu-latest
+    container:
+      image: jas4711/guix:latest
     permissions:
       contents: write
       packages: write
