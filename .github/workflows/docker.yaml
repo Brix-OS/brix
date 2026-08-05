@@ -17,6 +17,19 @@ jobs:
       contents: write
       packages: write
     steps:
+
+      - name: Setup
+        run: |
+          groupadd --gid 0 root
+          useradd --uid 0 --gid root --shell /bin/sh --home-dir / --system root
+          cp -rL /gnu/store/*profile/etc/* /etc/
+          groupadd --system guixbuild
+          for i in $(seq -w 1 10); do useradd -g guixbuild -G guixbuild -d /var/empty -s $(command -v nologin) -c "Guix build user $i" --system guixbuilder$i; done
+          export HOME=/
+          env LANG=C.UTF-8 guix-daemon --disable-chroot --build-users-group=guixbuild &
+          guix archive --authorize < /share/guix/ci.guix.gnu.org.pub
+          guix archive --authorize < /share/guix/bordeaux.guix.gnu.org.pub
+      
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
