@@ -202,7 +202,7 @@ jobs:
           fi
           . "$BRIX_PROFILE/etc/profile"
           brix pack \
-          --expression='(use-modules (gnu packages base) (gnu packages gcc)) (list glibc-for-fhs gcc guix bash-minimal coreutils-minimal net-base shadow nss-certs)' \
+          --expression='(@ (gnu packages base) glibc-for-fhs)' gcc-toolchain guix bash-minimal coreutils-minimal net-base shadow nss-certs \
           --save-provenance \
           -S /lib=lib \
           -S /usr/include=include \
@@ -271,6 +271,8 @@ jobs:
       - name: Debug filesystem
         shell: sh
         run: |
+          set +e
+          
           echo "=== /__e ==="
           ls -la /__e/ 2>/dev/null || echo "NO /__e"
           
@@ -279,23 +281,29 @@ jobs:
           
           echo "=== ELF interpreter ==="
           if [ -f /__e/node24/bin/node ]; then
-            readelf -l /__e/node24/bin/node | grep interpreter
+            readelf -l /__e/node24/bin/node 2>/dev/null | grep interpreter || echo "NO READELF"
           fi
           
           echo "=== /lib64 ==="
           ls -la /lib64/ 2>/dev/null || echo "NO /lib64"
           
           echo "=== ld-linux ==="
-          find / -name "ld-linux*" -type f 2>/dev/null | head -5
+          find / -name "ld-linux*" -type f 2>/dev/null | head -5 || echo "NO LD-LINUX"
           
           echo "=== libstdc++ ==="
-          find / -name "libstdc++.so*" -type f 2>/dev/null | head -5
+          find / -name "libstdc++.so*" -type f 2>/dev/null | head -5 || echo "NO LIBSTDC++"
           
           echo "=== /etc/ld.so.cache ==="
           ls -la /etc/ld.so.cache 2>/dev/null || echo "NO CACHE"
+
+          echo "=== check gcc dependency ==="
+          ldd /__e/node24/bin/node 2>/dev/null || echo "NO LDD"
           
-          echo "=== node test ==="
-          /__e/node24/bin/node --version 2>/dev/null || echo "NODE FAILED"
+          echo "=== find libstdc++ ==="
+          find / -name "libstdc++.so.6" -type f 2>/dev/null | head -5 || echo "NOT FOUND"
+
+          echo "=== ldd libstdc++ ==="
+          ldd /__e/node24/bin/node 2>/dev/null | grep libstdc++
 
       - name: Checkout test
         uses: actions/checkout@v4
