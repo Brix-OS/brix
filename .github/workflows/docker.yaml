@@ -11,8 +11,6 @@ jobs:
   build:
     name: Pull Brix then Release
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/brix-os/brix-ci:testing
     permissions:
       contents: write
       packages: write
