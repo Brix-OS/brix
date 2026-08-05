@@ -1,15 +1,13 @@
 FROM brix-ci-base:latest
 
-# === FHS setup (must be first — creates /lib64, /usr/bin, etc.) ===
+# === FHS setup ===
+# /bin is already a symlink from the pack (-S /bin=bin)
 RUN PROFILE=$(dirname $(readlink -f /lib)) && \
-    mkdir -p /usr /bin /etc && \
+    mkdir -p /usr /etc && \
     ln -sf /lib /usr/lib && \
     ln -sf /lib /lib64 && \
     ln -sf /bin /usr/bin && \
     ln -sf /sbin /usr/sbin && \
-    for f in "$PROFILE"/bin/*; do \
-        [ -e "$f" ] && ln -sf "$f" /bin/"$(basename "$f")"; \
-    done && \
     for f in "$PROFILE"/etc/*; do \
         [ -e "$f" ] && ln -sf "$f" /etc/"$(basename "$f")"; \
     done

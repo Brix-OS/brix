@@ -204,6 +204,7 @@ jobs:
           brix pack \
           --expression='(@ (gnu packages base) glibc-for-fhs)' gcc-toolchain guix bash-minimal coreutils-minimal net-base shadow nss-certs \
           --save-provenance \
+          -S /bin=bin \
           -S /lib=lib \
           -S /usr/include=include \
           -S /sbin=sbin \
