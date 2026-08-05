@@ -114,7 +114,7 @@ Return a version of TAG that follows these rules."
 
 ;; According to the specifications this is required for backwards
 ;; compatibility.  It duplicates information provided by the manifest.
-(define* (repositories path id #:optional (tag "guix"))
+(define* (repositories path id #:optional (tag "brix"))
   "Generate a repositories file referencing PATH and the image ID."
   `((,(canonicalize-repository-name tag) . ((latest . ,id)))))
 
@@ -139,8 +139,8 @@ Return a version of TAG that follows these rules."
     ;; Some container engines such as <https://github.com/cea-hpc/pcocc> require
     ;; these fields.
     (history . ,(list->vector `(((created . ,time)
-                                 (created_by . "guix pack -f docker")
-                                 (comment . "guix pack")))))
+                                 (created_by . "brix pack -f docker")
+                                 (comment . "brix pack")))))
     (os . "linux")
     (rootfs . ((type . "layers")
                (diff_ids . ,(list->vector layers-diff-ids))))))
@@ -183,7 +183,7 @@ tarballs in a reproducible fashion."
 
 (define* (build-docker-image image paths prefix
                              #:key
-                             (repository "guix")
+                             (repository "brix")
                              (extra-files '())
                              (transformations '())
                              (system (utsname:machine (uname)))
