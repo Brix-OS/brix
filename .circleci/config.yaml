@@ -27,11 +27,20 @@ jobs:
       #         echo "export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
       #         echo "export GH_TOKEN=${GITHUB_TOKEN}"
       #       } >> "$BASH_ENV"
-          
+      
+      - run:
+          name: Install GitHub CLI
+          command: |
+            GUIX_PROFILE="$HOME/.config/guix/current"
+            . "$GUIX_PROFILE/etc/profile"
+            guix install github-cli
+            . "$GUIX_PROFILE/etc/profile"
+            gh --version
+            
       - run:
           name: Manual checkout
           command: |
-            git clone --depth 1 "${CIRCLE_REPOSITORY_URL}" .
+            gh repo clone "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" . -- --depth 1
 
       # - run:
       #     name: Unshallow repository
@@ -149,15 +158,6 @@ jobs:
               -f .github/workflows/Dockerfile \
               .github/workflows/
             docker push ghcr.io/brix-os/brix-ci:testing
-            
-      - run:
-          name: Install GitHub CLI
-          command: |
-            GUIX_PROFILE="$HOME/.config/guix/current"
-            . "$GUIX_PROFILE/etc/profile"
-            guix install gh
-            . "$GUIX_PROFILE/etc/profile"
-            gh --version
             
       - run:
           name: Create GitHub Release for Current Profile
