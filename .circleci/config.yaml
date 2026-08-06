@@ -9,27 +9,11 @@ jobs:
           password: ${GITHUB_TOKEN}
     resource_class: medium
     environment:
-      SSL_CERT_DIR: /tmp/certs
-      GIT_SSL_CAINFO: /tmp/certs/ca-certificates.crt
-      SSL_CERT_FILE: /tmp/certs/ca-certificates.crt
-      GNUTLS_SYSTEM_TRUST_FILE: /tmp/certs/ca-certificates.crt
-      GNUTLS_SYSTEM_TRUST_STORE: /tmp/certs
-      CURL_CA_BUNDLE: /tmp/certs/ca-certificates.crt
-      REQUESTS_CA_BUNDLE: /tmp/certs/ca-certificates.crt
+      SSL_CERT_DIR: /etc/ssl/certs
+      GIT_SSL_CAINFO: /etc/ssl/certs/ca-certificates.crt
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       GH_TOKEN: ${GITHUB_TOKEN}
     steps:
-      - run:
-          name: Setup CA certificates
-          command: |
-            NSS_CERTS=$(ls -d /gnu/store/*nss-certs* 2>/dev/null | head -1)
-            if [ -z "$NSS_CERTS" ]; then
-              echo "ERROR: nss-certs not found in /gnu/store"
-              exit 1
-            fi
-            mkdir -p /tmp/certs
-            ln -sf "${NSS_CERTS}/etc/ssl/certs/ca-certificates.crt" /tmp/certs/ca-certificates.crt
-            echo "CA certs linked from: ${NSS_CERTS}"
-            
       - checkout
 
       # - run:
