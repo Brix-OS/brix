@@ -9,22 +9,29 @@ jobs:
           password: ${GITHUB_TOKEN}
     resource_class: medium
     environment:
+      SSL_CERT_DIR: /etc/ssl/certs
+      GIT_SSL_CAINFO: /etc/ssl/certs/ca-certificates.crt
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
       GH_TOKEN: ${GITHUB_TOKEN}
     steps:
-      - run:
-          name: Export SSL Env
-          command: |
-            {
-              echo "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
-              echo "export SSL_CERT_DIR=/etc/ssl/certs"
-              echo "export GNUTLS_SYSTEM_TRUST_FILE=/etc/ssl/certs/ca-certificates.crt"
-              echo "export GNUTLS_SYSTEM_TRUST_STORE=/etc/ssl/certs"
-              echo "export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
-              echo "export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
-              echo "export GH_TOKEN=${GITHUB_TOKEN}"
-            } >> "$BASH_ENV"
+      # - run:
+      #     name: Export SSL Env
+      #     command: |
+      #       {
+      #         echo "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+      #         echo "export SSL_CERT_DIR=/etc/ssl/certs"
+      #         echo "export GNUTLS_SYSTEM_TRUST_FILE=/etc/ssl/certs/ca-certificates.crt"
+      #         echo "export GNUTLS_SYSTEM_TRUST_STORE=/etc/ssl/certs"
+      #         echo "export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
+      #         echo "export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
+      #         echo "export GH_TOKEN=${GITHUB_TOKEN}"
+      #       } >> "$BASH_ENV"
           
-      - checkout
+      - run:
+          name: Manual checkout
+          command: |
+            git clone --depth 1 "${CIRCLE_REPOSITORY_URL}" .
 
       # - run:
       #     name: Unshallow repository
