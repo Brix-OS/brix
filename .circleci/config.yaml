@@ -48,10 +48,11 @@ jobs:
       - run:
           name: Install GitHub CLI
           command: |
-            GUIX_PROFILE="$HOME/.config/guix/current"
-            . "$GUIX_PROFILE/etc/profile"
+            if [ -d "$HOME/.config/guix/current" ]; then
+              GUIX_PROFILE="$HOME/.config/guix/current"
+              . "$GUIX_PROFILE/etc/profile"
+            fi
             guix install github-cli
-            . "$GUIX_PROFILE/etc/profile"
             gh --version
             
       - run:
