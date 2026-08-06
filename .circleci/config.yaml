@@ -9,11 +9,18 @@ jobs:
           password: ${GITHUB_TOKEN}
     resource_class: medium
     environment:
-      SSL_CERT_DIR: /etc/ssl/certs
-      GIT_SSL_CAINFO: /etc/ssl/certs/ca-certificates.crt
-      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       GH_TOKEN: ${GITHUB_TOKEN}
     steps:
+      - run:
+          name: Export SSL Env
+          command: |
+            {
+              echo "export SSL_CERT_DIR=/etc/ssl/certs"
+              echo "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+              echo "export GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates.crt"
+              echo "export GH_TOKEN=${GITHUB_TOKEN}"
+            } >> "$BASH_ENV"
+          
       - checkout
 
       # - run:
