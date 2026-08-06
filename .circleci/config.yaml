@@ -41,8 +41,8 @@ jobs:
       - run:
           name: Test Guix
           command: |
-            which brix
-            ls -l "$(which brix)"
+            # which brix
+            # ls -l "$(which brix)"
             guix describe
       
       - run:
