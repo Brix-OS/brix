@@ -9,6 +9,7 @@ jobs:
           password: ${GITHUB_TOKEN}
     resource_class: medium
     environment:
+      SSL_CERT_DIR: /tmp/certs
       GIT_SSL_CAINFO: /tmp/certs/ca-certificates.crt
       SSL_CERT_FILE: /tmp/certs/ca-certificates.crt
       GH_TOKEN: ${GITHUB_TOKEN}
