@@ -12,6 +12,10 @@ jobs:
       SSL_CERT_DIR: /tmp/certs
       GIT_SSL_CAINFO: /tmp/certs/ca-certificates.crt
       SSL_CERT_FILE: /tmp/certs/ca-certificates.crt
+      GNUTLS_SYSTEM_TRUST_FILE: /tmp/certs/ca-certificates.crt
+      GNUTLS_SYSTEM_TRUST_STORE: /tmp/certs
+      CURL_CA_BUNDLE: /tmp/certs/ca-certificates.crt
+      REQUESTS_CA_BUNDLE: /tmp/certs/ca-certificates.crt
       GH_TOKEN: ${GITHUB_TOKEN}
     steps:
       - run:
