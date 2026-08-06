@@ -33,7 +33,7 @@ jobs:
           name: Configure Guix channel
           command: |
             mkdir -p ~/.config/guix
-            cat > ~/.config/guix/channels.scm <<'EOF'
+            cat > ~/.config/guix/channels.scm \<<'EOF'
             (cons
              (channel
               (name 'guix)
