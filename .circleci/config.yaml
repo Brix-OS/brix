@@ -15,9 +15,12 @@ jobs:
           name: Export SSL Env
           command: |
             {
-              echo "export SSL_CERT_DIR=/etc/ssl/certs"
               echo "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
-              echo "export GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates.crt"
+              echo "export SSL_CERT_DIR=/etc/ssl/certs"
+              echo "export GNUTLS_SYSTEM_TRUST_FILE=/etc/ssl/certs/ca-certificates.crt"
+              echo "export GNUTLS_SYSTEM_TRUST_STORE=/etc/ssl/certs"
+              echo "export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
+              echo "export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"
               echo "export GH_TOKEN=${GITHUB_TOKEN}"
             } >> "$BASH_ENV"
           
