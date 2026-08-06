@@ -8,6 +8,10 @@ jobs:
           username: ${GITHUB_ACTOR:-brix-ci}
           password: ${GITHUB_TOKEN}
     resource_class: medium
+    environment:
+      GIT_SSL_CAINFO: /tmp/certs/ca-certificates.crt
+      SSL_CERT_FILE: /tmp/certs/ca-certificates.crt
+      GH_TOKEN: ${GITHUB_TOKEN}
     steps:
       - run:
           name: Setup CA certificates
