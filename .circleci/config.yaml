@@ -9,6 +9,18 @@ jobs:
           password: ${GITHUB_TOKEN}
     resource_class: medium
     steps:
+      - run:
+          name: Setup CA certificates
+          command: |
+            NSS_CERTS=$(ls -d /gnu/store/*nss-certs* 2>/dev/null | head -1)
+            if [ -z "$NSS_CERTS" ]; then
+              echo "ERROR: nss-certs not found in /gnu/store"
+              exit 1
+            fi
+            mkdir -p /tmp/certs
+            ln -sf "${NSS_CERTS}/etc/ssl/certs/ca-certificates.crt" /tmp/certs/ca-certificates.crt
+            echo "CA certs linked from: ${NSS_CERTS}"
+            
       - checkout
 
       # - run:
@@ -80,43 +92,6 @@ jobs:
             cp /etc/guix/signing-key.pub brix-testing-archive.pub
 
       - run:
-          name: Create GitHub Release
-          command: |
-            REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-            API_BASE="https://api.github.com/repos/${REPO}"
-            UPLOAD_BASE="https://uploads.github.com/repos/${REPO}"
-
-            RELEASE_JSON=$(curl -fsSL \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "${API_BASE}/releases/tags/testing" 2>/dev/null || true)
-
-            RELEASE_ID=$(echo "$RELEASE_JSON" | grep '"id":' | head -1 | sed -E 's/.*"id": *([0-9]+).*/\1/')
-
-            if [ -z "$RELEASE_ID" ]; then
-              RELEASE_JSON=$(curl -fsSL -X POST \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
-                -H "Accept: application/vnd.github.v3+json" \
-                "${API_BASE}/releases" \
-                -d "{
-                  \"tag_name\": \"testing\",
-                  \"name\": \"Brix CI Testing\",
-                  \"body\": \"- **Commit:** \\`${CIRCLE_SHA1}\\` from ci-testing branch\\n\\nDownload \\`brix-testing.nar\\` and \\`brix-testing-signing-key.pub\\` to import this exact Brix revision on your machine without running \\`brix pull\\`:\\n\\n\\`\\`\\`bash\\nsudo brix archive --authorize < brix-testing-signing-key.pub\\nsudo brix archive --import < brix-testing.nar\\n\\`\\`\\`\",
-                  \"generate_release_notes\": true
-                }")
-              RELEASE_ID=$(echo "$RELEASE_JSON" | grep '"id":' | head -1 | sed -E 's/.*"id": *([0-9]+).*/\1/')
-            fi
-
-            for file in brix-testing.nar brix-testing-archive.pub; do
-              curl -fsSL -X POST \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
-                -H "Accept: application/vnd.github.v3+json" \
-                -H "Content-Type: application/octet-stream" \
-                "${UPLOAD_BASE}/releases/${RELEASE_ID}/assets?name=$(basename "$file")" \
-                --data-binary @"$file"
-            done
-
-      - run:
           name: Generate Docker base for CI
           no_output_timeout: 30m
           command: |
@@ -164,6 +139,42 @@ jobs:
               -f .github/workflows/Dockerfile \
               .github/workflows/
             docker push ghcr.io/brix-os/brix-ci:testing
+            
+      - run:
+          name: Install GitHub CLI
+          command: |
+            GUIX_PROFILE="$HOME/.config/guix/current"
+            . "$GUIX_PROFILE/etc/profile"
+            guix install gh
+            . "$GUIX_PROFILE/etc/profile"
+            gh --version
+            
+      - run:
+          name: Create GitHub Release for Current Profile
+          command: |
+            GUIX_PROFILE="$HOME/.config/guix/current"
+            . "$GUIX_PROFILE/etc/profile"
+            REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+
+            if ! gh release view testing --repo "${REPO}" >/dev/null 2>&1; then
+              gh release create testing \
+                --title "Brix CI Testing" \
+                --notes "- **Commit:** \`${CIRCLE_SHA1}\` from ci-testing branch
+
+            Download \`brix-testing.nar\` and \`brix-testing-signing-key.pub\` to import this exact Brix revision on your machine without running \`brix pull\`:
+
+            \`\`\`bash
+            sudo brix archive --authorize < brix-testing-signing-key.pub
+            sudo brix archive --import < brix-testing.nar
+            \`\`\`" \
+                --repo "${REPO}"
+            fi
+
+            for asset in brix-testing.nar brix-testing-archive.pub; do
+              gh release delete-asset testing "$asset" --repo "${REPO}" --yes 2>/dev/null || true
+            done
+
+            gh release upload testing brix-testing.nar brix-testing-archive.pub --repo "${REPO}"
 
       - run:
           name: Debug on failure
