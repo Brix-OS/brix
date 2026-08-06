@@ -29,7 +29,12 @@ jobs:
             mkdir -p /tmp/certs
             ln -sf "${NSS_CERTS}/etc/ssl/certs/ca-certificates.crt" /tmp/certs/ca-certificates.crt
             echo "CA certs linked from: ${NSS_CERTS}"
-            
+            ls -la /tmp/certs/ca-certificates.crt
+            # CircleCI checkout-subcommand spawns git without inheriting job env vars,
+            # so set the cert path in git's own global config as a fallback.
+            git config --global http.sslCAInfo /tmp/certs/ca-certificates.crt
+            echo "Git global http.sslCAInfo: $(git config --global http.sslCAInfo)"
+
       - checkout
 
       # - run:
