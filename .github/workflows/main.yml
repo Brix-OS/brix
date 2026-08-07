@@ -47,7 +47,7 @@ jobs:
             (channel
               (name 'guix)
               (url "https://github.com/brix-os/brix.git")
-              (branch "ci-testing"))
+              (branch "master"))
             %default-channels)
           EOF
 
