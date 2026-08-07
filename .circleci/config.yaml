@@ -88,7 +88,16 @@ jobs:
               GUIX_PROFILE="$HOME/.config/guix/current"
               . "$GUIX_PROFILE/etc/profile"
             fi
-            guix install github-cli
+            for attempt in 1 2 3; do
+              if guix install github-cli; then
+                break
+              elif [ "$attempt" -eq 3 ]; then
+                echo "guix install failed after 3 attempts"
+                exit 1
+              fi
+              echo "Attempt $attempt failed, retrying in 15s..."
+              sleep 15
+            done
             gh --version
             
       - run:
