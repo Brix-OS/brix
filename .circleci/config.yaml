@@ -46,29 +46,29 @@ jobs:
             # ls -l "$(which brix)"
             guix describe
       
-      - run:
-          name: Install GitHub CLI
-          command: |
-            if [ -d "$HOME/.config/guix/current" ]; then
-              GUIX_PROFILE="$HOME/.config/guix/current"
-              . "$GUIX_PROFILE/etc/profile"
-            fi
+      # - run:
+      #     name: Install GitHub CLI
+      #     command: |
+      #       if [ -d "$HOME/.config/guix/current" ]; then
+      #         GUIX_PROFILE="$HOME/.config/guix/current"
+      #         . "$GUIX_PROFILE/etc/profile"
+      #       fi
             
-            # GUIX_DAEMON_SOCKET="${GUIX_DAEMON_SOCKET:-/var/guix/daemon-socket/socket}"
+      #       # GUIX_DAEMON_SOCKET="${GUIX_DAEMON_SOCKET:-/var/guix/daemon-socket/socket}"
 
-            ls /var/guix/daemon-socket || true
+      #       ls /var/guix/daemon-socket || true
             
-            # if [ ! -S "$GUIX_DAEMON_SOCKET" ]; then
-              env LANG=C.UTF-8 guix-daemon \
-              --build-users-group=guixbuild \
-              >/tmp/guix-daemon.log 2>&1 &
-              sleep 2
-            # fi
+      #       # if [ ! -S "$GUIX_DAEMON_SOCKET" ]; then
+      #         env LANG=C.UTF-8 guix-daemon \
+      #         --build-users-group=guixbuild \
+      #         >/tmp/guix-daemon.log 2>&1 &
+      #         sleep 2
+      #       # fi
 
-            ls /var/guix/daemon-socket || true
+      #       ls /var/guix/daemon-socket || true
             
-            guix install github-cli
-            gh --version
+      #       guix install github-cli
+      #       gh --version
             
       - run:
           name: Manual checkout
