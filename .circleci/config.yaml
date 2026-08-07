@@ -33,11 +33,11 @@ jobs:
       #       git fetch --unshallow 2>/dev/null || true
       #       git fetch --tags 2>/dev/null || true
 
-      - run:
-          name: Setup
-          command: |
-            env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
-            sleep 2
+      # - run:
+      #     name: Setup
+      #     command: |
+      #       env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
+      #       sleep 2
 
       - run:
           name: Test Guix
@@ -54,14 +54,18 @@ jobs:
               . "$GUIX_PROFILE/etc/profile"
             fi
             
-            GUIX_DAEMON_SOCKET="${GUIX_DAEMON_SOCKET:-/var/guix/daemon-socket/socket}"
+            # GUIX_DAEMON_SOCKET="${GUIX_DAEMON_SOCKET:-/var/guix/daemon-socket/socket}"
 
-            if [ ! -S "$GUIX_DAEMON_SOCKET" ]; then
+            ls /var/guix/daemon-socket || true
+            
+            # if [ ! -S "$GUIX_DAEMON_SOCKET" ]; then
               env LANG=C.UTF-8 guix-daemon \
               --build-users-group=guixbuild \
               >/tmp/guix-daemon.log 2>&1 &
               sleep 2
-            fi
+            # fi
+
+            ls /var/guix/daemon-socket || true
             
             guix install github-cli
             gh --version
