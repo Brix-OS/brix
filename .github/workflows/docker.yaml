@@ -2,7 +2,7 @@ name: Brix CI — Pull then Pack
 
 on:
   push:
-    branches: [ci-testing]
+    branches: [ci-testing-debug]
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -31,11 +31,11 @@ jobs:
         with:
           pullAfterInstall: false
 
-      - name: Test Brix
-        run: |
-          which brix
-          ls -l $(which brix)
-          brix describe
+      # - name: Test Brix
+      #   run: |
+      #     which brix
+      #     ls -l $(which brix)
+      #     brix describe
 
       - name: Configure Brix channel
         run: |
@@ -49,57 +49,57 @@ jobs:
             %default-channels)
           EOF
 
-      - name: Check if pull is needed
-        id: check-pull
-        run: |
-          set -euo pipefail
+      # - name: Check if pull is needed
+      #   id: check-pull
+      #   run: |
+      #     set -euo pipefail
           
-          DESCRIBE_OUTPUT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe 2>/dev/null || true)
-          if [ -z "$DESCRIBE_OUTPUT" ]; then
-            echo "pull_needed=true" >> $GITHUB_OUTPUT
-            echo "guix describe failed or returned empty. Assuming pull required."
-            exit 0
-          fi
+      #     DESCRIBE_OUTPUT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe 2>/dev/null || true)
+      #     if [ -z "$DESCRIBE_OUTPUT" ]; then
+      #       echo "pull_needed=true" >> $GITHUB_OUTPUT
+      #       echo "guix describe failed or returned empty. Assuming pull required."
+      #       exit 0
+      #     fi
           
-          INSTALLED_COMMIT=$(echo "$DESCRIBE_OUTPUT" | grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
-          HEAD_COMMIT=$(git rev-parse HEAD)
-          echo "installed_commit=$INSTALLED_COMMIT" >> $GITHUB_OUTPUT
-          echo "head_commit=$HEAD_COMMIT" >> $GITHUB_OUTPUT
+      #     INSTALLED_COMMIT=$(echo "$DESCRIBE_OUTPUT" | grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
+      #     HEAD_COMMIT=$(git rev-parse HEAD)
+      #     echo "installed_commit=$INSTALLED_COMMIT" >> $GITHUB_OUTPUT
+      #     echo "head_commit=$HEAD_COMMIT" >> $GITHUB_OUTPUT
           
-          if [ -z "$INSTALLED_COMMIT" ]; then
-            echo "pull_needed=true" >> $GITHUB_OUTPUT
-            echo "Could not extract installed commit from guix describe. Assuming pull required."
-            exit 0
-          fi
+      #     if [ -z "$INSTALLED_COMMIT" ]; then
+      #       echo "pull_needed=true" >> $GITHUB_OUTPUT
+      #       echo "Could not extract installed commit from guix describe. Assuming pull required."
+      #       exit 0
+      #     fi
           
-          if [ "$INSTALLED_COMMIT" = "$HEAD_COMMIT" ]; then
-            echo "pull_needed=false" >> $GITHUB_OUTPUT
-            echo "Installed commit matches HEAD. Nothing to do."
-            exit 0
-          fi
+      #     if [ "$INSTALLED_COMMIT" = "$HEAD_COMMIT" ]; then
+      #       echo "pull_needed=false" >> $GITHUB_OUTPUT
+      #       echo "Installed commit matches HEAD. Nothing to do."
+      #       exit 0
+      #     fi
           
-          # Guard: if installed commit isn't in this repo, we can't diff.
-          # This happens when the installed binary/substitute references a
-          # commit that was force-pushed away or built from a different channel.
-          if ! git rev-parse --quiet --verify "$INSTALLED_COMMIT^{commit}" >/dev/null 2>&1; then
-            echo "pull_needed=true" >> $GITHUB_OUTPUT
-            echo "Installed commit $INSTALLED_COMMIT not found in repo history. Pull and rebuild required."
-            exit 0
-          fi
+      #     # Guard: if installed commit isn't in this repo, we can't diff.
+      #     # This happens when the installed binary/substitute references a
+      #     # commit that was force-pushed away or built from a different channel.
+      #     if ! git rev-parse --quiet --verify "$INSTALLED_COMMIT^{commit}" >/dev/null 2>&1; then
+      #       echo "pull_needed=true" >> $GITHUB_OUTPUT
+      #       echo "Installed commit $INSTALLED_COMMIT not found in repo history. Pull and rebuild required."
+      #       exit 0
+      #     fi
           
-          CHANGED_FILES=$(git diff --name-only "$INSTALLED_COMMIT" HEAD)
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
+      #     CHANGED_FILES=$(git diff --name-only "$INSTALLED_COMMIT" HEAD)
+      #     echo "Changed files:"
+      #     echo "$CHANGED_FILES"
           
-          NON_CI=$(echo "$CHANGED_FILES" | grep -v '^\.github/workflows/' | grep -v '^\.gitlab-ci' | grep -v '^README' | grep -v '^ROADMAP' | grep -v '^TODO' | grep -v '^\.gitignore' | grep -v '^\.github/' || true)
+      #     NON_CI=$(echo "$CHANGED_FILES" | grep -v '^\.github/workflows/' | grep -v '^\.gitlab-ci' | grep -v '^README' | grep -v '^ROADMAP' | grep -v '^TODO' | grep -v '^\.gitignore' | grep -v '^\.github/' || true)
           
-          if [ -z "$NON_CI" ]; then
-            echo "pull_needed=false" >> $GITHUB_OUTPUT
-            echo "Only CI/docs files changed. Skipping pull and rebuild."
-          else
-            echo "pull_needed=true" >> $GITHUB_OUTPUT
-            echo "Source files changed. Pull and rebuild required."
-          fi
+      #     if [ -z "$NON_CI" ]; then
+      #       echo "pull_needed=false" >> $GITHUB_OUTPUT
+      #       echo "Only CI/docs files changed. Skipping pull and rebuild."
+      #     else
+      #       echo "pull_needed=true" >> $GITHUB_OUTPUT
+      #       echo "Source files changed. Pull and rebuild required."
+      #     fi
 
       - name: Guix pull
         if: steps.check-pull.outputs.pull_needed == 'true'
@@ -201,8 +201,12 @@ jobs:
             BRIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           . "$BRIX_PROFILE/etc/profile"
-          brix pack \
-          --expression='(@ (gnu packages base) glibc-for-fhs)' gcc-toolchain guix bash-minimal coreutils-minimal net-base shadow nss-certs \
+
+          guix pack \
+          -e '(@ (gnu packages base) glibc-for-fhs)' \
+          -e '(@ (gnu packages package-management) current-guix)' \
+          gawk grep git github-cli procps tar which gcc-toolchain bash-minimal \
+          coreutils-minimal net-base shadow wget nss-certs \
           --save-provenance \
           -S /bin=bin \
           -S /lib=lib \
@@ -269,49 +273,63 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Debug filesystem
-        shell: sh
+      - name: Check if pull is needed
+        id: check-pull
         run: |
-          set +e
+          set -euo pipefail
           
-          echo "=== /__e ==="
-          ls -la /__e/ 2>/dev/null || echo "NO /__e"
-          
-          echo "=== /__e/node24/bin/node ==="
-          ls -la /__e/node24/bin/node 2>/dev/null || echo "NO NODE"
-          
-          echo "=== ELF interpreter ==="
-          if [ -f /__e/node24/bin/node ]; then
-            readelf -l /__e/node24/bin/node 2>/dev/null | grep interpreter || echo "NO READELF"
+          DESCRIBE_OUTPUT=$(/var/guix/profiles/per-user/root/current-guix/bin/guix describe 2>/dev/null || true)
+          if [ -z "$DESCRIBE_OUTPUT" ]; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "guix describe failed or returned empty. Assuming pull required."
+            exit 0
           fi
           
-          echo "=== /lib64 ==="
-          ls -la /lib64/ 2>/dev/null || echo "NO /lib64"
+          INSTALLED_COMMIT=$(echo "$DESCRIBE_OUTPUT" | grep -A4 "^  guix " | grep "commit:" | awk '{print $2}')
+          HEAD_COMMIT=$(git rev-parse HEAD)
+          echo "installed_commit=$INSTALLED_COMMIT" >> $GITHUB_OUTPUT
+          echo "head_commit=$HEAD_COMMIT" >> $GITHUB_OUTPUT
           
-          echo "=== ld-linux ==="
-          find / -name "ld-linux*" -type f 2>/dev/null | head -5 || echo "NO LD-LINUX"
+          if [ -z "$INSTALLED_COMMIT" ]; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Could not extract installed commit from guix describe. Assuming pull required."
+            exit 0
+          fi
           
-          echo "=== libstdc++ ==="
-          find / -name "libstdc++.so*" -type f 2>/dev/null | head -5 || echo "NO LIBSTDC++"
+          if [ "$INSTALLED_COMMIT" = "$HEAD_COMMIT" ]; then
+            echo "pull_needed=false" >> $GITHUB_OUTPUT
+            echo "Installed commit matches HEAD. Nothing to do."
+            exit 0
+          fi
           
-          echo "=== /etc/ld.so.cache ==="
-          ls -la /etc/ld.so.cache 2>/dev/null || echo "NO CACHE"
-
-          echo "=== check gcc dependency ==="
-          ldd /__e/node24/bin/node 2>/dev/null || echo "NO LDD"
+          # Guard: if installed commit isn't in this repo, we can't diff.
+          # This happens when the installed binary/substitute references a
+          # commit that was force-pushed away or built from a different channel.
+          if ! git rev-parse --quiet --verify "$INSTALLED_COMMIT^{commit}" >/dev/null 2>&1; then
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Installed commit $INSTALLED_COMMIT not found in repo history. Pull and rebuild required."
+            exit 0
+          fi
           
-          echo "=== find libstdc++ ==="
-          find / -name "libstdc++.so.6" -type f 2>/dev/null | head -5 || echo "NOT FOUND"
-
-          echo "=== ldd libstdc++ ==="
-          ldd /__e/node24/bin/node 2>/dev/null | grep libstdc++
-
-      - name: Checkout test
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+          CHANGED_FILES=$(git diff --name-only "$INSTALLED_COMMIT" HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          NON_CI=$(echo "$CHANGED_FILES" | grep -v '^\.github/workflows/' | grep -v '^\.gitlab-ci' | grep -v '^README' | grep -v '^ROADMAP' | grep -v '^TODO' | grep -v '^\.gitignore' | grep -v '^\.github/' || true)
+          
+          if [ -z "$NON_CI" ]; then
+            echo "pull_needed=false" >> $GITHUB_OUTPUT
+            echo "Only CI/docs files changed. Skipping pull and rebuild."
+          else
+            echo "pull_needed=true" >> $GITHUB_OUTPUT
+            echo "Source files changed. Pull and rebuild required."
+          fi
 
       - name: Verify Brix works
         run: |
           guix describe
           brix describe  
+
+      - name: install stuff
+        run: |
+          guix install neovim
