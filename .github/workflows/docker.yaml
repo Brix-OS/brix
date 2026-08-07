@@ -1,10 +1,10 @@
 name: Brix CI — Pull then Pack
 
 on:
-  push:
-    branches: [ci-testing]
-    tags:
-      - 'v*.*.*'
+  # push:
+  #   branches: [ci-testing]
+  #   tags:
+  #     - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
@@ -203,7 +203,10 @@ jobs:
           #   GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           guix pack \
-          -e '(@ (gnu packages base) glibc-for-fhs)' -e '(@ (gnu packages package-management) current-guix)' gawk grep git tar which gcc-toolchain bash-minimal coreutils-minimal net-base shadow wget nss-certs \
+          -e '(@ (gnu packages base) glibc-for-fhs)' \
+          -e '(@ (gnu packages package-management) current-guix)' \
+          gawk grep git github-cli procps tar which gcc-toolchain bash-minimal \
+          coreutils-minimal net-base shadow wget nss-certs \
           --save-provenance \
           -S /bin=bin \
           -S /share=share \
