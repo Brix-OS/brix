@@ -204,7 +204,7 @@ jobs:
 
           guix pack \
           -e '(@ (gnu packages base) glibc-for-fhs)' \
-          -e '(@ (gnu packages package-management) current-guix)' \
+          -e '(@ (gnu packages package-management) (current-guix))' \
           gawk grep git github-cli procps tar which gcc-toolchain bash-minimal \
           coreutils-minimal net-base shadow wget nss-certs \
           --save-provenance \
