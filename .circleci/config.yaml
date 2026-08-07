@@ -73,7 +73,7 @@ jobs:
       - run:
           name: Manual checkout
           command: |
-            git clone https://github.com/brix-os/brix.git . -- --depth 1
+            git clone https://github.com/brix-os/brix.git . --depth 1
 
       - run:
           name: Configure Guix channel
