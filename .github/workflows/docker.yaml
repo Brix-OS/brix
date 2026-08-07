@@ -1,8 +1,8 @@
 name: Brix CI — Pull then Pack
 
 on:
-  # push:
-  #   branches: [ci-testing]
+  push:
+    branches: [ci-testing]
   #   tags:
   #     - 'v*.*.*'
   workflow_dispatch:
