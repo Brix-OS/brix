@@ -70,6 +70,20 @@ jobs:
       - run:
           name: Install GitHub CLI
           command: |
+            # Ensure guix-daemon is running (it may have left a stale socket)
+            if ! timeout 5 guix describe >/dev/null 2>&1; then
+              echo "Daemon not responding, restarting..."
+              pkill -f guix-daemon 2>/dev/null || true
+              rm -f /var/guix/daemon-socket/socket 2>/dev/null || true
+              env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
+              for i in $(seq 1 30); do
+                if [ -S /var/guix/daemon-socket/socket ]; then
+                  echo "Daemon ready after ${i}s"
+                  break
+                fi
+                sleep 1
+              done
+            fi
             if [ -d "$HOME/.config/guix/current" ]; then
               GUIX_PROFILE="$HOME/.config/guix/current"
               . "$GUIX_PROFILE/etc/profile"
