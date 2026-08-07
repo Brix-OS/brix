@@ -102,7 +102,7 @@ jobs:
           fi
 
       - name: Guix pull
-        if: steps.check-pull.outputs.pull_needed == 'true'
+        # if: steps.check-pull.outputs.pull_needed == 'true'
         env:
           GUIX_LOCPATH: /var/guix/profiles/per-user/root/guix-profile/lib/locale
           LC_ALL: en_US.utf8
