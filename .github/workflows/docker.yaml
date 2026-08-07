@@ -109,7 +109,7 @@ jobs:
           LC_ALL: C
         run: |
           guix describe
-          guix pull --allow-downgrades -M 6 -v 3
+          guix pull --allow-downgrades --disable-authentication -M 6 -v 3 -K
 
       - name: Test Pulled Brix
         if: steps.check-pull.outputs.pull_needed == 'true'
@@ -120,7 +120,7 @@ jobs:
           ls -l $(which brix)
           brix describe
 
-      - name: Export Guix profile
+      - name: Export Current Guix Profile
         if: steps.check-pull.outputs.pull_needed == 'true'
         run: |
           if [ -d "$HOME/.config/guix/current" ]; then
@@ -203,10 +203,10 @@ jobs:
           #   GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
           guix pack \
-          -e '(@ (gnu packages base) glibc-for-fhs)' \
+          -e '(@ (gnu packages base) glibc-for-fhs)' gcc-toolchain \
           -e '(@ (gnu packages package-management) current-guix)' \
-          gawk grep git github-cli procps tar which gcc-toolchain bash-minimal \
-          coreutils-minimal net-base shadow wget nss-certs \
+          bash-minimal coreutils-minimal net-base nss-certs \
+          gawk grep git github-cli procps tar which shadow wget \
           --save-provenance \
           -S /bin=bin \
           -S /share=share \
@@ -267,3 +267,19 @@ jobs:
           brix describe
           which wget
           which awk
+
+      - name: Install
+        run: |
+          brix install neovim
+      - name: Pull
+        run: |
+          guix describe
+          guix pull --allow-downgrades --disable-authentication -M 6 -v 3 -K
+
+      - name: Debug SSH on failure
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 30
+        with:
+          limit-access-to-actor: true
+
