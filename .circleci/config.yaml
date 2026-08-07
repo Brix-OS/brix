@@ -114,7 +114,7 @@ jobs:
               sleep 2
             fi
 
-            guix pull --allow-downgrades -M 6 -v 3
+            guix pull --allow-downgrades --disable-authentication -M 6 -v 3
 
       - run:
           name: Test Pulled Brix
