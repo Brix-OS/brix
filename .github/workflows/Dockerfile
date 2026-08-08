@@ -13,9 +13,7 @@ RUN mkdir -p /usr && \
 RUN groupadd --gid 0 root && \
     useradd --uid 0 --gid root --shell /bin/sh --home-dir / --system root
 
-# 3. cp -rL /gnu/store/*profile/etc/* /etc/
-# Why: Copy profile etc files into place.
-RUN cp -rL /gnu/store/*profile/etc/* /etc/
+RUN for f in /gnu/store/*profile/etc/*; do cp -rLf "$f" /etc/; done
 
 # 4. groupadd --system guixbuild
 # 5. for i in $(seq -w 1 10); do useradd ... guixbuilder$i; done
