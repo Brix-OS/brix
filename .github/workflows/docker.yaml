@@ -11,8 +11,8 @@ jobs:
   build:
     name: Pull Brix then Release
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/brix-os/brix-ci:testing
+    # container:
+    #   image: ghcr.io/brix-os/brix-ci:testing
     permissions:
       contents: write
       packages: write
@@ -155,44 +155,48 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      # - name: Pack pulled Guix binary
-      #   if: steps.check-pull.outputs.pull_needed == 'true'
-      #   run: |
-      #     GUIX_PROFILE="$HOME/.config/guix/current"
-      #     . "$GUIX_PROFILE/etc/profile"
-      #     sudo systemctl restart guix-daemon
-      #     brix pack -s x86_64-linux --localstatedir \
-      #       --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
-      #     cp -L brix-binary brix-binary-testing.x86_64-linux.tar.xz
+      - name: Pack pulled Guix binary
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        run: |
+          GUIX_PROFILE="$HOME/.config/guix/current"
+          . "$GUIX_PROFILE/etc/profile"
+          sudo systemctl restart guix-daemon
+          brix pack -s x86_64-linux --localstatedir \
+            --profile-name=current-guix --root=brix-binary --expression='(use-modules (gnu packages package-management)) (current-guix)'
+          cp -L brix-binary brix-binary-testing.x86_64-linux.tar.xz
 
-      # - name: Release binary to GitHub
-      #   if: steps.check-pull.outputs.pull_needed == 'true'
-      #   uses: softprops/action-gh-release@v3
-      #   with:
-      #     tag_name: testing
-      #     files: brix-binary-testing.x86_64-linux.tar.xz
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release binary to GitHub
+        if: steps.check-pull.outputs.pull_needed == 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: testing
+          files: brix-binary-testing.x86_64-linux.tar.xz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Generate Docker image
+        run: |
+          if [ -d "$HOME/.config/guix/current" ]; then
+            GUIX_PROFILE="$HOME/.config/guix/current"
+          else
+            GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
+          fi
+          . "$GUIX_PROFILE/etc/profile"
+          brix system image --image-type=docker --network --root=$HOME/brix-docker ./gnu/system/examples/docker-image.tmpl -M 6
+          cp -L $HOME/brix-docker brix-docker-testing.tar.gz
 
-      # - name: Generate Docker image
-      #   run: |
-      #     if [ -d "$HOME/.config/guix/current" ]; then
-      #       GUIX_PROFILE="$HOME/.config/guix/current"
-      #     else
-      #       GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
-      #     fi
-      #     . "$GUIX_PROFILE/etc/profile"
-      #     brix system image --image-type=docker --network --root=$HOME/brix-docker ./gnu/system/examples/docker-image.tmpl -M 6
-      #     cp -L $HOME/brix-docker brix-docker-testing.tar.gz
-
-      # - name: Release Docker image to GitHub
-      #   uses: softprops/action-gh-release@v3
-      #   with:
-      #     tag_name: testing
-      #     files: |
-      #       brix-docker-testing.tar.gz
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Load and push Docker image
+        run: |
+          docker load < brix-docker-testing.tar.gz
+          docker tag brix:latest ghcr.io/brix-os/brix:testing
+          docker push ghcr.io/brix-os/brix:testing
 
       - name: Generate Docker base for CI
         run: |
@@ -227,13 +231,6 @@ jobs:
           path: brix-ci-base.tar.gz
           archive: false
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Build and push CI image
         run: |
           docker load < brix-ci-base.tar.gz
