@@ -11,12 +11,18 @@ jobs:
   build:
     name: Pull Brix then Release
     runs-on: ubuntu-latest
-    # container:
-    #   image: ghcr.io/brix-os/brix-ci:testing
+    container:
+       image: ghcr.io/brix-os/brix-ci:testing
     permissions:
       contents: write
       packages: write
     steps:
+      - name: Setup
+        run: env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
+
+      - name: Install
+        run: guix install neovim
+      
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
@@ -251,12 +257,12 @@ jobs:
       #     username: ${{ secrets.DOCKER_USERNAME }}
       #     password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # - name: Debug SSH on failure
-      #   if: failure()
-      #   uses: mxschmitt/action-tmate@v3
-      #   timeout-minutes: 30
-      #   with:
-      #     limit-access-to-actor: true
+      - name: Debug SSH on failure
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 30
+        with:
+          limit-access-to-actor: true
 
   test:
     needs: build
