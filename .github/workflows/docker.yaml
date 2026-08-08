@@ -17,11 +17,11 @@ jobs:
       contents: write
       packages: write
     steps:
-      - name: Setup
-        run: env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
-
       - name: Install
-        run: guix install neovim
+        run: |
+          env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
+          guix install neovim
+          guix pull --allow-downgrades -M 6 -v 3
       
       - name: Checkout repository
         uses: actions/checkout@v7
