@@ -46,11 +46,6 @@ RUN PROFILE=$(echo /gnu/store/*-profile) && \
     if [ -f "$PROFILE/bin/gcc" ]; then ln -sf "$PROFILE/bin/gcc" /bin/cc; fi
 
 # FHS PATH
-ENV PATH=/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/sbin:$PATH
-
-COPY guix-wrapper.sh /usr/local/bin/guix
-RUN chmod +x /usr/local/bin/guix
+ENV PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:$PATH
 
 CMD ["/bin/sh"]
-
-RUN guix describe
