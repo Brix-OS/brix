@@ -129,8 +129,10 @@ jobs:
           # else
           #   GUIX_PROFILE="/var/guix/profiles/per-user/root/current-guix"
           fi
-          guix archive --export -r $(readlink -f $GUIX_PROFILE) > brix-testing.nar
-          cp /etc/guix/signing-key.pub brix-testing-archive.pub
+          STORE_PATH=$(readlink -f "$GUIX_PROFILE")
+          echo "store_path=$STORE_PATH" >> $GITHUB_ENV
+          guix archive --export -r "$STORE_PATH"  > brix-testing-current-profile.nar
+          cp /etc/guix/signing-key.pub brix-testing-current-profile.pub
 
       - name: Create GitHub Release with commit hash
         if: steps.check-pull.outputs.pull_needed == 'true'
@@ -140,14 +142,17 @@ jobs:
           # name: "Brix CI ${{ env.SHORT_SHA }}"
           body: |
             - **Commit:** `${{ github.sha }}` from ci-testing branch
+            - **Store path:** `${{ env.STORE_PATH }}`
 
-            Download `brix-testing.nar` and `brix-testing-current-profile.pub` to import
+            Download `brix-testing-current-profile.nar` and `brix-testing-current-profile.pub` to import
             this exact Brix revision on your machine without running `brix pull`:
 
             ```bash
             sudo brix archive --authorize < brix-testing-current-profile.pub
             sudo brix archive --import < brix-testing-current-profile.nar
+            ln -s ${{ env.STORE_PATH }} ~/.config/guix/current
             ```
+            
           generate_release_notes: true
           files: |
             brix-testing-current-profile.nar
@@ -268,6 +273,7 @@ jobs:
       - name: Install
         run: |
           brix install neovim
+          
       - name: Pull
         run: |
           guix describe
