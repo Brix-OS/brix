@@ -11,17 +11,12 @@ jobs:
   build:
     name: Pull Brix then Release
     runs-on: ubuntu-latest
-    container:
-       image: ghcr.io/brix-os/brix-ci:testing
+    # container:
+      # image: ghcr.io/brix-os/brix-ci:testing
     permissions:
       contents: write
       packages: write
     steps:
-      - name: Install
-        run: |
-          env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
-          guix install neovim
-          guix pull --allow-downgrades -M 6 -v 3
       
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -278,6 +273,8 @@ jobs:
 
       - name: Install
         run: |
+          ls /var/guix/daemon-socket/
+          env LANG=C.UTF-8 guix-daemon --build-users-group=guixbuild &
           brix install neovim
           
       - name: Pull
